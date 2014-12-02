@@ -1,0 +1,32 @@
+#define MAX_FC_SRC_NUM 16
+#define MAX_FC_ADV_NUM_PER_SRC 128
+
+struct fc_req_src_t {
+    uint32_t src_id;
+    uint32_t src_req_num;
+};
+
+struct fc_req_t {
+    string query;
+    fc_req_src_t fc_req_srcs = vector(MAX_FC_SRC_NUM);
+};
+
+struct fc_res_adv_t {
+    uint64_t winfo_id;
+    uint32_t bid;
+    uint32_t q;
+    string title;
+    string desc1;
+    string desc2;
+    string targeturl;
+    string showurl;
+};
+
+struct fc_res_src_t {
+    uint32_t src_id;
+    fc_res_adv_t res_advs = vector(MAX_FC_ADV_NUM_PER_SRC);
+};
+
+struct fc_res_t {
+    fc_res_src_t res_srcs = vector(MAX_FC_SRC_NUM);
+};

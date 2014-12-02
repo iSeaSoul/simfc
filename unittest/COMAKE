@@ -1,0 +1,50 @@
+#edit-mode: -*- python -*-
+
+WORKROOT('../../')
+CopyUsingHardLink(True)
+CPPFLAGS('-D_GNU_SOURCE -D__STDC_LIMIT_MACROS')
+CXXFLAGS('-g -pipe -W -Wall -fPIC')
+IDLFLAGS('--compack')
+UBRPCFLAGS('--compack')
+INCPATHS('.. ../include ../idl/ ../output ../output/include ')
+LDFLAGS('-lpthread -lcrypto -lrt')
+
+# Dependent Module
+CONFIGS('app/ecom/im/im-proto@im-proto_1-0-14-0_PD_BL')
+CONFIGS('public/ub@ub_1-2-20-0_PD_BL')
+CONFIGS('lib2-64/wordseg@wordseg_3-2-1-1_PD_BL')
+CONFIGS('lib2-64/libcrf@libcrf_2-1-3-0_PD_BL')
+CONFIGS('lib2-64/others-ex@others-ex_3-1-14-2_PD_BL')
+CONFIGS('third-64/gtest@base')
+CONFIGS('app-test/ecom/im/common/utlib@base')
+
+user_sources=GLOB('../src/*.cpp ../idl/fc_interface.idl')
+user_headers=GLOB('../include/*.h')
+
+Application('fcserver',
+    Sources('../src/MainServer.cpp ../src/FCServer.cpp ../src/WordSegmenter.cpp ../src/Utils.cpp ../idl/fc_interface.idl'),
+    HeaderFiles(user_headers),
+    OutputPath("./output/bin"))
+
+# Static Librarys
+StaticLibrary('ut_fcserver', Sources(user_sources,
+    CppFlags('-D_UNIT_TEST_ -Dprivate=public -Dprotected=public')),
+    HeaderFiles(user_headers))
+
+# Generated UT Test
+ut_sources=glob.glob('../unittest/test_*.cpp')
+import string
+ut_target_list = []
+for test in ut_sources:
+    ut_target = os.path.splitext(test)[0]
+    Application(ut_target,Sources(test,
+    CppFlags('-D__INLINE__="" -Dprivate=public -Dprotected=public -D__64BIT__')),
+    HeaderFiles(user_headers),
+    Libraries('./libut_fcserver.a','../../app-test/ecom/im/common/utlib/output/lib/hookmon.so'),
+    LinkFlags('-lpthread -lcrypto -lrt'))
+    ut_target_list.append(ut_target)
+
+TARGET('ut', 
+    PhonyMode(True), 
+    Prefixes(string.join(ut_target_list)),
+    ShellCommands('autorun.sh -u -p "../unittest/*"'))
